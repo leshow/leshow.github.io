@@ -8,14 +8,16 @@
   <title>Unit Type Params</title>
   <meta property="og:title" content="Unit Type Params" />
   <meta name="twitter:title" content="Unit Type Params" />
-  <meta name="description" content="I always enjoy reading blogs about design patterns or tricks people have picked up writing Rust. This is one I&rsquo;ve seen a few times but never read about.
-I&rsquo;ve been doing class assignments from the wonderful Operating Systems cs140e. I highly recommend this class if you know Rust and would like to try writing some lower level code. The class involves building bits of an OS for the raspberry pi.">
-  <meta property="og:description" content="I always enjoy reading blogs about design patterns or tricks people have picked up writing Rust. This is one I&rsquo;ve seen a few times but never read about.
-I&rsquo;ve been doing class assignments from the wonderful Operating Systems cs140e. I highly recommend this class if you know Rust and would like to try writing some lower level code. The class involves building bits of an OS for the raspberry pi.">
-  <meta name="twitter:description" content="I always enjoy reading blogs about design patterns or tricks people have picked up writing Rust. This is one I&rsquo;ve seen a few times but never read about.
-I&rsquo;ve been doing class assignments …">
+  <meta name="description" content="I always enjoy reading blogs about patterns or tricks people have picked up writing Rust. I&rsquo;ve seen this a few times but not read about it anywhere.
+I&rsquo;ve been doing class assignments from Operating Systems cs140e. I highly recommend this class if you know a bit of Rust and would like to try writing some lower level code. The class involves building bits of an OS for the raspberry pi.">
+  <meta property="og:description" content="I always enjoy reading blogs about patterns or tricks people have picked up writing Rust. I&rsquo;ve seen this a few times but not read about it anywhere.
+I&rsquo;ve been doing class assignments from Operating Systems cs140e. I highly recommend this class if you know a bit of Rust and would like to try writing some lower level code. The class involves building bits of an OS for the raspberry pi.">
+  <meta name="twitter:description" content="I always enjoy reading blogs about patterns or tricks people have picked up writing Rust. I&rsquo;ve seen this a few times but not read about it anywhere.
+I&rsquo;ve been doing class assignments from …">
   <meta name="author" content="Evan Cameron"/>
   <link href='https://leshow.github.io/img/favicon.ico' rel='icon' type='image/x-icon'/>
+  <meta property="og:image" content="https://leshow.github.io/img/avatar-icon.png" />
+  <meta name="twitter:image" content="https://leshow.github.io/img/avatar-icon.png" />
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:site" content="@evan_cam_" />
   <meta name="twitter:creator" content="@evan_cam_" />
@@ -125,6 +127,10 @@ I&rsquo;ve been doing class assignments …">
     <div class="avatar-container">
       <div class="avatar-img-border">
         
+          <a title="Esoterically Typed" href="https://leshow.github.io">
+            <img class="avatar-img" src="https://leshow.github.io/img/avatar-icon.png" alt="Esoterically Typed" />
+          </a>
+        
       </div>
     </div>
 
@@ -158,11 +164,11 @@ I&rsquo;ve been doing class assignments …">
                   <span class="post-meta">
   
   
-  <i class="fa fa-calendar-o"></i>&nbsp;Posted on September 8, 2018
+  <i class="fa fa-calendar-o"></i>&nbsp;Posted on September 10, 2018
   
   
   &nbsp;|&nbsp;
-  <i class="fa fa-clock-o"></i> 6 minutes (1154 words)
+  <i class="fa fa-clock-o"></i> 6 minutes (1150 words)
   
   
 </span>
@@ -184,13 +190,13 @@ I&rsquo;ve been doing class assignments …">
       <article role="main" class="blog-post">
         
 
-<p>I always enjoy reading blogs about design patterns or tricks people have picked up writing Rust. This is one I&rsquo;ve seen a few times but never read about.</p>
+<p>I always enjoy reading blogs about patterns or tricks people have picked up writing Rust. I&rsquo;ve seen this a few times but not read about it anywhere.</p>
 
-<p>I&rsquo;ve been doing class assignments from the wonderful <a href="https://web.stanford.edu/class/cs140e/syllabus/">Operating Systems cs140e</a>. I highly recommend this class if you know Rust and would like to try writing some lower level code. The class involves building bits of an OS for the raspberry pi. It requires some hardware components, and it took me a while to source the parts they used in the class, particularly the CP2102 USB dongle (links at the end of the article).</p>
+<p>I&rsquo;ve been doing class assignments from <a href="https://web.stanford.edu/class/cs140e/syllabus/">Operating Systems cs140e</a>. I highly recommend this class if you know a bit of Rust and would like to try writing some lower level code. The class involves building bits of an OS for the raspberry pi. It requires some hardware components, and it took me a while to source the parts they used in the class, particularly the CP2102 USB dongle. Links at the end of the article.</p>
 
 <h2 id="the-problem">The problem</h2>
 
-<p><a href="https://web.stanford.edu/class/cs140e/assignments/1-shell/">Assignment 1</a> has multiple phases, one of which is to implement parts of the <a href="https://en.wikipedia.org/wiki/XMODEM">Xmodem</a> protocol. Xmodem is is used for transferring data through serial interfaces. Although we haven&rsquo;t arrived there yet, I imagine it&rsquo;ll be used for transferring data from the pc to Pi through the CP2102 dongle.</p>
+<p><a href="https://web.stanford.edu/class/cs140e/assignments/1-shell/">Assignment 1</a> has multiple phases, one of which is to implement parts of the <a href="https://en.wikipedia.org/wiki/XMODEM">Xmodem</a> protocol. Xmodem is used for transferring data through serial interfaces. Although we haven&rsquo;t arrived there yet, I imagine it&rsquo;ll be used for transferring data to pi through the CP2102 dongle.</p>
 
 <p>This is the <code>Xmodem</code> struct as given at the start of the assignment:</p>
 <div class="highlight"><pre class="chroma"><code class="language-rust" data-lang="rust"><span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">Xmodem</span><span class="o">&lt;</span><span class="n">R</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -204,9 +210,9 @@ I&rsquo;ve been doing class assignments …">
 </span><span class="w">
 </span><span class="w"></span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">noop</span><span class="p">(</span><span class="n">_</span>: <span class="nc">Progress</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span><span class="w">
 </span><span class="w"></span></code></pre></div>
-<p>Notice <code>ProgressFn</code>, which here is a function pointer. After I completed the assignment, I came back to this. I wanted to show a running progress bar, but with a function pointer I had no ability to capture any outside variables in my <code>ProgressFn</code>. Or at least no way that I knew of. If I wanted to capture variables from another scope, I needed to refactor this to be a closure.</p>
+<p>Notice <code>ProgressFn</code> is a function pointer. After I completed the assignment, I came back to this. I wanted to show a running progress bar, but with a function pointer I had no ability to capture any outside variables in my <code>ProgressFn</code>. Or at least no way that I knew of. If I wanted to capture variables from another scope, I needed to refactor this into a closure.</p>
 
-<p>There&rsquo;s a lot of solutions on offer here. I could have just stuffed a <code>Box&lt;dyn FnMut(ProgressFn)&gt;</code> in the struct and been done with it, and while the Xmodem didn&rsquo;t have no_std, none of the other assignments did allocation and I didn&rsquo;t want to start here. So, feeling parsimonious, I decided against boxing altogether.</p>
+<p>There&rsquo;s a lot of solutions on offer here. I could have just stuffed a <code>Box&lt;dyn FnMut(ProgressFn)&gt;</code> in the struct and been done with it, and while the Xmodem didn&rsquo;t have no_std, none of the other assignments did allocation and I didn&rsquo;t want to start here. Feeling parsimonious, I decided against boxing altogether.</p>
 
 <h2 id="first-attempt">First attempt</h2>
 <div class="highlight"><pre class="chroma"><code class="language-rust" data-lang="rust"><span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">Xmodem</span><span class="o">&lt;</span><span class="n">R</span><span class="p">,</span><span class="w"> </span><span class="n">F</span><span class="o">&gt;</span><span class="w">
@@ -219,7 +225,7 @@ I&rsquo;ve been doing class assignments …">
 </span><span class="w">    </span><span class="n">progress</span>: <span class="nc">F</span><span class="w">
 </span><span class="w"></span><span class="p">}</span><span class="w">
 </span><span class="w"></span></code></pre></div>
-<p>To me, this had a syllogism to it. I want to hold a closure, so I should bound my declaration by that. When you introduce bounds here, they propagate to the every impl block afterwards. See if you can spot the problem here:</p>
+<p>To me, this had a syllogism to it. I want to hold a closure, so I should bound my declaration by that. When you introduce bounds here, they propagate, almost leaking out, to the every impl block afterwards. See if you can spot the problem:</p>
 <div class="highlight"><pre class="chroma"><code class="language-rust" data-lang="rust"><span class="k">impl</span><span class="o">&lt;</span><span class="n">T</span>: <span class="nc">io</span>::<span class="n">Read</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">io</span>::<span class="n">Write</span><span class="p">,</span><span class="w"> </span><span class="n">F</span>: <span class="nb">FnMut</span><span class="p">(</span><span class="n">Progress</span><span class="p">)</span><span class="o">&gt;</span><span class="w"> </span><span class="n">Xmodem</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="n">F</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
 </span><span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">new</span><span class="p">(</span><span class="n">inner</span>: <span class="nc">T</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">Self</span><span class="w"> </span><span class="p">{</span><span class="w">
 </span><span class="w">        </span><span class="n">Xmodem</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -241,7 +247,7 @@ I&rsquo;ve been doing class assignments …">
 </span><span class="w">    </span><span class="c1">// and others
 </span><span class="c1"></span><span class="p">}</span><span class="w">
 </span><span class="w"></span></code></pre></div>
-<p><code>Xmodem::new</code> is returning <code>progress::noop</code>, our function pointer. But it&rsquo;s type variable says that it must be a <code>Xmodem&lt;T, F&gt;</code> where F is some <code>FnMut(Progress)</code>. Substituting a <code>|_: Progress| {}</code> in it&rsquo;s place doesn&rsquo;t help either, it&rsquo;s still choosing some specific trait when there&rsquo;s a more general one in the type signature. Our type <code>F</code> claims to be valid for all <code>FnMut</code>, but we&rsquo;re giving it a specific closure/fn pointer. You may recognize this as being an existential type.</p>
+<p><code>Xmodem::new</code> is returning <code>progress::noop</code>, our function pointer. Only it&rsquo;s type variable says that it must be a <code>Xmodem&lt;T, F&gt;</code> where F is some <code>FnMut(Progress)</code>. Substituting a closure <code>|_: Progress| {}</code> in it&rsquo;s place doesn&rsquo;t help either, it&rsquo;s still choosing some specific trait when there&rsquo;s a more general one in the type signature. Our type <code>F</code> claims to be valid for all <code>FnMut</code>, but we&rsquo;re giving it a specific closure/fn pointer. You may recognize this as being an existential type.</p>
 
 <p>Here&rsquo;s the error:</p>
 <div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">error<span class="o">[</span>E0308<span class="o">]</span>: mismatched types
@@ -252,7 +258,7 @@ I&rsquo;ve been doing class assignments …">
     <span class="p">|</span>
     <span class="o">=</span> note: expected <span class="nb">type</span> <span class="sb">`</span>F<span class="sb">`</span>
                found <span class="nb">type</span> <span class="sb">`</span>fn<span class="o">(</span>progress::Progress<span class="o">)</span> <span class="o">{</span>progress::noop<span class="o">}</span><span class="sb">`</span></code></pre></div>
-<h2 id="separate-new-impls">Separate new* impls</h2>
+<h2 id="separate-the-new-impls">Separate the new* impls</h2>
 
 <p>We can get the above to compile by breaking up the <code>new</code> method into it&rsquo;s own impl that&rsquo;s specific about the type it returns:</p>
 <div class="highlight"><pre class="chroma"><code class="language-rust" data-lang="rust"><span class="k">impl</span><span class="o">&lt;</span><span class="n">T</span>: <span class="nc">io</span>::<span class="n">Read</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">io</span>::<span class="n">Write</span><span class="o">&gt;</span><span class="w"> </span><span class="n">Xmodem</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="k">fn</span><span class="p">(</span><span class="n">Progress</span><span class="p">)</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -284,11 +290,11 @@ note: required by <span class="sb">`</span>&lt;Xmodem&lt;<span class="o">()</spa
 <span class="m">46</span> <span class="p">|</span> <span class="p">|</span>         Xmodem::transmit_with_progress<span class="o">(</span>data, to, progress::noop<span class="o">)</span>
 <span class="m">47</span> <span class="p">|</span> <span class="p">|</span>     <span class="o">}</span>
    <span class="p">|</span> <span class="p">|</span>_____^</code></pre></div>
-<p>Even if this can be satisfied with an annotation, I&rsquo;ll have broken every callsite for <code>Xmodem</code> by needing to type information. I decided to go back and try something else.</p>
+<p>Even if this can be satisfied with an annotation, I&rsquo;ll have broken every call-site for <code>Xmodem</code> by needing to add type information.</p>
 
 <h2 id="using-unit-type-params">Using unit type params</h2>
 
-<p>In the original implementation, <code>Xmodem</code> does something interesting with it&rsquo;s <code>inner</code> value. It&rsquo;s set to an unbounded type parameter <code>R</code>. I decided to take this approach with <code>F</code>. If anyone has written Haskell, this may look familiar. Data types like a binary tree aren&rsquo;t usually bounded by <code>Ord</code> in the declaration, but the functions that interact with it provide an interface to the data that is bounded. I think this is a good strategy if it&rsquo;s possible. Try to keep the actual type declaration as generic as possible. You can control the bounds by choosing which methods you make public. Only in the impl are the bounds introduced (and then only on methods).</p>
+<p>In the original implementation, <code>Xmodem</code> does something interesting with it&rsquo;s <code>inner</code> value. It&rsquo;s set to an unbounded type parameter <code>R</code>. We can take this approach with <code>F</code>. If anyone has written Haskell, this may look familiar: data types like a binary tree aren&rsquo;t usually bounded by <code>Ord</code> in the declaration, but the functions that interact with it provide an interface to the data that is bounded. I think this is a good strategy if it&rsquo;s available. Try to keep the actual type declaration as generic as possible. You can control the bounds by choosing which methods you make public. Only in the impl are the bounds introduced, and then only on the methods where necessary.</p>
 
 <p>The new <code>Xmodem</code> type:</p>
 <div class="highlight"><pre class="chroma"><code class="language-rust" data-lang="rust"><span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">Xmodem</span><span class="o">&lt;</span><span class="n">R</span><span class="p">,</span><span class="w"> </span><span class="n">F</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -354,9 +360,9 @@ note: required by <span class="sb">`</span>&lt;Xmodem&lt;<span class="o">()</spa
 </span><span class="w">    </span><span class="c1">// etc
 </span><span class="c1"></span><span class="p">}</span><span class="w">
 </span><span class="w"></span></code></pre></div>
-<p>And everything would work just fine. I obviously didn&rsquo;t invent this, I don&rsquo;t know who did, but I&rsquo;ve seen <code>()</code> used before and I think it creates less room for confusion.</p>
+<p>And everything would work just fine. <code>()</code> creates less room for confusion and ambiguity though.</p>
 
-<p>Note, on IRC, an improvement was suggested that makes the existential return a bit more explicit (thanks talchas). Using the <code>()</code> type param again on the <code>new</code> impl:</p>
+<p>On IRC, an improvement was suggested that makes things a bit more explicit. Using the <code>()</code> type param again on the <code>new</code> impl:</p>
 <div class="highlight"><pre class="chroma"><code class="language-rust" data-lang="rust"><span class="k">impl</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="w"> </span><span class="n">Xmodem</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="o">&gt;</span><span class="w">
 </span><span class="w"></span><span class="k">where</span><span class="w">
 </span><span class="w">    </span><span class="n">T</span>: <span class="nc">io</span>::<span class="n">Read</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">io</span>::<span class="n">Write</span><span class="p">,</span><span class="w">
@@ -373,27 +379,27 @@ note: required by <span class="sb">`</span>&lt;Xmodem&lt;<span class="o">()</spa
 </span><span class="w"></span></code></pre></div>
 <h2 id="on-nightly">On Nightly</h2>
 
-<p>Thanks to talchas on IRC, who mentioned a solution that&rsquo;s available behind a feature flag on nightly. It&rsquo;s possible to declare a type as existential and circumvent having to pass <code>()</code> as a type parameter in the impl block.</p>
+<p>I was also directed to this possible solution, which is available on nightly behind a feature flag. This makes it possible to declare a type as existential and circumvent passing <code>()</code> as a type parameter. This is and the previous solution are from talchas:</p>
 <div class="highlight"><pre class="chroma"><code class="language-rust" data-lang="rust"><span class="cp">#![feature(existential_type)]</span><span class="w">
 </span><span class="w"></span><span class="n">existential</span><span class="w"> </span><span class="k">type</span> <span class="nc">ProgressFn</span>: <span class="nb">FnMut</span><span class="p">();</span><span class="w">
 </span><span class="w">
-</span><span class="w"></span><span class="k">struct</span> <span class="nc">Xmodem</span><span class="o">&lt;</span><span class="n">F</span><span class="o">&gt;</span><span class="p">(</span><span class="n">F</span><span class="p">);</span><span class="w">
+</span><span class="w"></span><span class="k">struct</span> <span class="nc">Foo</span><span class="o">&lt;</span><span class="n">F</span><span class="o">&gt;</span><span class="p">(</span><span class="n">F</span><span class="p">);</span><span class="w">
 </span><span class="w">
-</span><span class="w"></span><span class="k">impl</span><span class="w"> </span><span class="n">Xmodem</span><span class="o">&lt;</span><span class="n">ProgressFn</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w"></span><span class="k">impl</span><span class="w"> </span><span class="n">Foo</span><span class="o">&lt;</span><span class="n">ProgressFn</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
 </span><span class="w">    </span><span class="k">fn</span> <span class="nf">new</span><span class="p">()</span><span class="w"> </span>-&gt; <span class="nc">Self</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span><span class="w">        </span><span class="n">Xmodem</span><span class="p">(</span><span class="o">||</span><span class="p">())</span><span class="w">
+</span><span class="w">        </span><span class="n">Foo</span><span class="p">(</span><span class="o">||</span><span class="p">())</span><span class="w">
 </span><span class="w">    </span><span class="p">}</span><span class="w">
 </span><span class="w"></span><span class="p">}</span><span class="w">
 </span><span class="w"></span></code></pre></div>
-<p>To me this seems closer to ideal. We have the language to tell the type system that ProgressFn is in existential and pass it as a type parameter directly.</p>
+<p>IMO, this seems closer to ideal. We have the language to tell the type system what&rsquo;s going on.</p>
 
 <h2 id="thank-you">Thank you</h2>
 
-<p>Thanks for reading! The Rust community is wonderful, special thanks to those on the #rust IRC</p>
+<p>Thanks for reading! The Rust community has been great to me over the last few years. I come from a web background, and never thought I would do anything interesting in a language as low level as Rust. Shout out to all the fine people I&rsquo;ve bothered with questions.</p>
 
 <h3 id="cp2102-dongle">CP2102 dongle</h3>
 
-<p>Be careful when you source this part to get the 5Pin version and not the 6Pin one that seems fairly popular online.</p>
+<p>Be careful when you source this part to get the 5-pin version and not the 6-pin one that seems fairly popular online.</p>
 
 <p>USA: <a href="https://www.amazon.com/HiLetgo-CP2102-Converter-Adapter-Downloader/dp/B00LODGRV8/ref=sr_1_4?s=electronics&amp;ie=UTF8&amp;qid=1536424599&amp;sr=1-4&amp;keywords=cp2102">cp2102</a></p>
 

@@ -168,7 +168,7 @@ I&rsquo;ve been doing class assignments from …">
   
   
   &nbsp;|&nbsp;
-  <i class="fa fa-clock-o"></i> 6 minutes (1146 words)
+  <i class="fa fa-clock-o"></i> 6 minutes (1155 words)
   
   
 </span>
@@ -272,7 +272,7 @@ I&rsquo;ve been doing class assignments from …">
 </span><span class="w">    </span><span class="p">}</span><span class="w">
 </span><span class="w"></span><span class="p">}</span><span class="w">
 </span><span class="w"></span></code></pre></div>
-<p>However, when you actually go to use this code, it produces a compiler error that after an hour of googling, I have no idea how to satisfy:</p>
+<p>However, when you actually go to use this code, it produces a compiler error with a misleading hint:</p>
 <div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">error<span class="o">[</span>E0284<span class="o">]</span>: <span class="nb">type</span> annotations required: cannot resolve <span class="sb">`</span>&lt;_ as std::ops::FnOnce&lt;<span class="o">(</span>progress::Progress,<span class="o">)</span>&gt;&gt;::Output <span class="o">==</span> <span class="o">()</span><span class="sb">`</span>
   --&gt; src/tests.rs:51:48
    <span class="p">|</span>
@@ -290,11 +290,11 @@ note: required by <span class="sb">`</span>&lt;Xmodem&lt;<span class="o">()</spa
 <span class="m">46</span> <span class="p">|</span> <span class="p">|</span>         Xmodem::transmit_with_progress<span class="o">(</span>data, to, progress::noop<span class="o">)</span>
 <span class="m">47</span> <span class="p">|</span> <span class="p">|</span>     <span class="o">}</span>
    <span class="p">|</span> <span class="p">|</span>_____^</code></pre></div>
-<p>Even if this can be satisfied with an annotation, I&rsquo;ll have broken every call-site for <code>Xmodem</code> by needing to add type information.</p>
+<p>You can solve this annotation with <code>Xmodem::&lt;(), fn(Progress) -&gt; ()&gt;::transmit</code>. But every call-site will need to be annotated. If the return type is changed to <code>impl FnMut</code>, as in the next section, it asks for an annotation I&rsquo;m not sure how to solve.</p>
 
 <h2 id="using-unit-type-params">Using unit type params</h2>
 
-<p>In the original implementation, <code>Xmodem</code> does something interesting with it&rsquo;s <code>inner</code> value. It&rsquo;s set to an unbounded type parameter <code>R</code>. We can take this approach with <code>F</code>. If anyone has written Haskell, this may look familiar: data types like a binary tree aren&rsquo;t usually bounded by <code>Ord</code> in the declaration, but the functions that interact with it provide an interface to the data that is bounded. I think this is a good strategy if it&rsquo;s available. Try to keep the actual type declaration as generic as possible. You can control the bounds by choosing which methods you make public. Only in the impl are the bounds introduced, and then only on the methods where necessary.</p>
+<p>In the original implementation, <code>Xmodem</code> does something interesting with it&rsquo;s <code>inner</code> value. It&rsquo;s set to an unbounded type parameter <code>R</code>. We can take this approach with <code>F</code>. If anyone has written Haskell, this may look familiar: data types like a binary tree aren&rsquo;t usually bounded by <code>Ord</code> in the declaration, however the functions that interact with it provide an interface to the data that is bounded. I think this is a good strategy if it&rsquo;s available. Keep the actual type declaration as generic as possible, then control the bounds by choosing which methods you make public. Only in the impl are the bounds introduced, and then only on the methods where necessary.</p>
 
 <p>The new <code>Xmodem</code> type:</p>
 <div class="highlight"><pre class="chroma"><code class="language-rust" data-lang="rust"><span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">Xmodem</span><span class="o">&lt;</span><span class="n">R</span><span class="p">,</span><span class="w"> </span><span class="n">F</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">

@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Esoterically Typed</title>
-    <link>https://leshow.github.io/</link>
-    <description>Recent content on Esoterically Typed</description>
+    <title>Posts on Esoterically Typed</title>
+    <link>https://leshow.github.io/post/</link>
+    <description>Recent content in Posts on Esoterically Typed</description>
     <generator>Hugo -- gohugo.io</generator>
     <managingEditor>cameron.evan@gmail.com (Evan Cameron)</managingEditor>
     <webMaster>cameron.evan@gmail.com (Evan Cameron)</webMaster>
     <lastBuildDate>Sat, 08 Sep 2018 12:28:03 -0400</lastBuildDate>
     
-	<atom:link href="https://leshow.github.io/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://leshow.github.io/post/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -20,15 +20,6 @@
       <guid>https://leshow.github.io/post/unit_type_pattern/</guid>
       <description>I always enjoy reading blogs about design patterns or tricks people have picked up writing Rust. This is one I&amp;rsquo;ve seen a few times but never read about.
 I&amp;rsquo;ve been doing class assignments from the wonderful Operating Systems cs140e. I highly recommend this class if you know Rust and would like to try writing some lower level code. The class involves building bits of an OS for the raspberry pi.</description>
-    </item>
-    
-    <item>
-      <title>About me</title>
-      <link>https://leshow.github.io/page/about/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <author>cameron.evan@gmail.com (Evan Cameron)</author>
-      <guid>https://leshow.github.io/page/about/</guid>
-      <description>My name is Evan Cameron (leshow on github/IRC). I like languages with cool type systems.</description>
     </item>
     
   </channel>

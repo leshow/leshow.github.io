@@ -168,7 +168,7 @@ I&rsquo;ve been doing class assignments from …">
   
   
   &nbsp;|&nbsp;
-  <i class="fa fa-clock-o"></i> 6 minutes (1155 words)
+  <i class="fa fa-clock-o"></i> 6 minutes (1183 words)
   
   
 </span>
@@ -336,7 +336,6 @@ note: required by <span class="sb">`</span>&lt;Xmodem&lt;<span class="o">()</spa
 </span><span class="w">        </span><span class="p">}</span><span class="w">
 </span><span class="w">    </span><span class="p">}</span><span class="w">
 </span><span class="w"></span><span class="p">}</span><span class="w">
-</span><span class="w"></span><span class="n">with_progress</span><span class="w">
 </span><span class="w"></span></code></pre></div>
 <p>If I had put <code>impl&lt;F&gt; Xmodem&lt;(), F&gt;</code>, I would either have to bound the entire <code>impl</code> block by <code>where F: Fn(Progress)</code>, which gets me back to:</p>
 <div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">error<span class="o">[</span>E0284<span class="o">]</span>: <span class="nb">type</span> annotations required: cannot resolve <span class="sb">`</span>&lt;_ as std::ops::FnOnce&lt;<span class="o">(</span>progress::Progress,<span class="o">)</span>&gt;&gt;::Output <span class="o">==</span> <span class="o">()</span><span class="sb">`</span>
@@ -348,17 +347,31 @@ note: required by <span class="sb">`</span>&lt;Xmodem&lt;<span class="o">()</spa
     <span class="p">|</span>                            ^^^^^^^^^^^^^^^^^^^^^^^^^ expected an <span class="sb">`</span>Fn&lt;<span class="o">(</span>progress::Progress,<span class="o">)</span>&gt;<span class="sb">`</span> closure, found <span class="sb">`</span>F<span class="sb">`</span></code></pre></div>
 <p>Unit&rsquo;s type and value are both <code>()</code>. In this case, we&rsquo;re able to satisfy the type parameters in the impl declaration and still control the bounds on the methods. The catch here is of course, the methods <code>transmit</code> <code>transmit_with_progress</code> and a few others not mentioned here are now only valid when <code>Xmodem::&lt;(), ()&gt;</code>.</p>
 
-<p>There&rsquo;s nothing prodigious about <code>()</code>. Any type will do. We could&rsquo;ve written:</p>
-<div class="highlight"><pre class="chroma"><code class="language-rust" data-lang="rust"><span class="k">impl</span><span class="w"> </span><span class="n">Xmodem</span><span class="o">&lt;</span><span class="kt">u8</span><span class="p">,</span><span class="w"> </span><span class="kt">u8</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span><span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">transmit</span><span class="o">&lt;</span><span class="n">R</span><span class="p">,</span><span class="w"> </span><span class="n">W</span><span class="o">&gt;</span><span class="p">(</span><span class="n">data</span>: <span class="nc">R</span><span class="p">,</span><span class="w"> </span><span class="n">to</span>: <span class="nc">W</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">io</span>::<span class="nb">Result</span><span class="o">&lt;</span><span class="kt">usize</span><span class="o">&gt;</span><span class="w">
-</span><span class="w">    </span><span class="k">where</span><span class="w">
-</span><span class="w">        </span><span class="n">W</span>: <span class="nc">io</span>::<span class="n">Read</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">io</span>::<span class="n">Write</span><span class="p">,</span><span class="w">
-</span><span class="w">        </span><span class="n">R</span>: <span class="nc">io</span>::<span class="n">Read</span><span class="p">,</span><span class="w">
-</span><span class="w">    </span><span class="p">{</span><span class="w">
-</span><span class="w">        </span><span class="n">Xmodem</span>::<span class="n">transmit_with_progress</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">to</span><span class="p">,</span><span class="w"> </span><span class="n">progress</span>::<span class="n">noop</span><span class="p">)</span><span class="w">
+<p><strong>edit</strong> I somehow forgot the most important code section of the post!</p>
+
+<p>Using unit as a type param we can write,</p>
+<div class="highlight"><pre class="chroma"><code class="language-rust" data-lang="rust"><span class="k">impl</span><span class="o">&lt;</span><span class="n">T</span>: <span class="nc">io</span>::<span class="n">Read</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">io</span>::<span class="n">Write</span><span class="o">&gt;</span><span class="w"> </span><span class="n">Xmodem</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">new</span><span class="p">(</span><span class="n">inner</span>: <span class="nc">T</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">Xmodem</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="k">fn</span><span class="p">(</span><span class="n">Progress</span><span class="p">)</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">        </span><span class="n">Xmodem</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">            </span><span class="n">packet</span>: <span class="mi">1</span><span class="p">,</span><span class="w">
+</span><span class="w">            </span><span class="n">started</span>: <span class="nc">false</span><span class="p">,</span><span class="w">
+</span><span class="w">            </span><span class="n">inner</span><span class="p">,</span><span class="w">
+</span><span class="w">            </span><span class="n">progress</span>: <span class="nc">progress</span>::<span class="n">noop</span><span class="p">,</span><span class="w">
+</span><span class="w">        </span><span class="p">}</span><span class="w">
 </span><span class="w">    </span><span class="p">}</span><span class="w">
-</span><span class="w">    </span><span class="c1">// etc
-</span><span class="c1"></span><span class="p">}</span><span class="w">
+</span><span class="w"></span><span class="p">}</span><span class="w">
+</span><span class="w"></span></code></pre></div>
+<p>There&rsquo;s nothing prodigious about <code>()</code>. Any type will do. We could&rsquo;ve written:</p>
+<div class="highlight"><pre class="chroma"><code class="language-rust" data-lang="rust"><span class="k">impl</span><span class="o">&lt;</span><span class="n">T</span>: <span class="nc">io</span>::<span class="n">Read</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">io</span>::<span class="n">Write</span><span class="o">&gt;</span><span class="w"> </span><span class="n">Xmodem</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="kt">u8</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">new</span><span class="p">(</span><span class="n">inner</span>: <span class="nc">T</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">Xmodem</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="k">fn</span><span class="p">(</span><span class="n">Progress</span><span class="p">)</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">        </span><span class="n">Xmodem</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">            </span><span class="n">packet</span>: <span class="mi">1</span><span class="p">,</span><span class="w">
+</span><span class="w">            </span><span class="n">started</span>: <span class="nc">false</span><span class="p">,</span><span class="w">
+</span><span class="w">            </span><span class="n">inner</span><span class="p">,</span><span class="w">
+</span><span class="w">            </span><span class="n">progress</span>: <span class="nc">progress</span>::<span class="n">noop</span><span class="p">,</span><span class="w">
+</span><span class="w">        </span><span class="p">}</span><span class="w">
+</span><span class="w">    </span><span class="p">}</span><span class="w">
+</span><span class="w"></span><span class="p">}</span><span class="w">
 </span><span class="w"></span></code></pre></div>
 <p>And everything would work just fine. <code>()</code> creates less room for confusion and ambiguity though.</p>
 

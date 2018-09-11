@@ -212,12 +212,12 @@ I&rsquo;ve been doing class assignments from …">
 </span><span class="w"></span></code></pre></div>
 <p>Notice <code>ProgressFn</code> is a function pointer. After I completed the assignment, I came back to this. I wanted to show a running progress bar, but with a function pointer I had no ability to capture any outside variables in my <code>ProgressFn</code>. Or at least no way that I knew of. If I wanted to capture variables from another scope, I needed to refactor this into a closure.</p>
 
-<p>There&rsquo;s a lot of solutions on offer here. I could have just stuffed a <code>Box&lt;dyn FnMut(ProgressFn)&gt;</code> in the struct and been done with it, and while the Xmodem didn&rsquo;t have no_std, none of the other assignments did allocation and I didn&rsquo;t want to start here. Feeling parsimonious, I decided against boxing altogether.</p>
+<p>There&rsquo;s a lot of solutions on offer here. I could have just stuffed a <code>Box&lt;dyn Fn(ProgressFn)&gt;</code> in the struct and been done with it, and while the Xmodem didn&rsquo;t have no_std, none of the other assignments did allocation and I didn&rsquo;t want to start here. Feeling parsimonious, I decided against boxing altogether.</p>
 
 <h2 id="first-attempt">First attempt</h2>
 <div class="highlight"><pre class="chroma"><code class="language-rust" data-lang="rust"><span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">Xmodem</span><span class="o">&lt;</span><span class="n">R</span><span class="p">,</span><span class="w"> </span><span class="n">F</span><span class="o">&gt;</span><span class="w">
 </span><span class="w"></span><span class="k">where</span><span class="w">
-</span><span class="w">    </span><span class="n">F</span>: <span class="nb">FnMut</span><span class="p">(</span><span class="n">Progress</span><span class="p">),</span><span class="w">
+</span><span class="w">    </span><span class="n">F</span>: <span class="nb">Fn</span><span class="p">(</span><span class="n">Progress</span><span class="p">),</span><span class="w">
 </span><span class="w"></span><span class="p">{</span><span class="w">
 </span><span class="w">    </span><span class="n">packet</span>: <span class="kt">u8</span><span class="p">,</span><span class="w">
 </span><span class="w">    </span><span class="n">inner</span>: <span class="nc">R</span><span class="p">,</span><span class="w">
@@ -226,7 +226,7 @@ I&rsquo;ve been doing class assignments from …">
 </span><span class="w"></span><span class="p">}</span><span class="w">
 </span><span class="w"></span></code></pre></div>
 <p>To me, this had a syllogism to it. I want to hold a closure, so I should bound my declaration by that. When you introduce bounds here, they propagate, almost leaking out, to the every impl block afterwards. See if you can spot the problem:</p>
-<div class="highlight"><pre class="chroma"><code class="language-rust" data-lang="rust"><span class="k">impl</span><span class="o">&lt;</span><span class="n">T</span>: <span class="nc">io</span>::<span class="n">Read</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">io</span>::<span class="n">Write</span><span class="p">,</span><span class="w"> </span><span class="n">F</span>: <span class="nb">FnMut</span><span class="p">(</span><span class="n">Progress</span><span class="p">)</span><span class="o">&gt;</span><span class="w"> </span><span class="n">Xmodem</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="n">F</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
+<div class="highlight"><pre class="chroma"><code class="language-rust" data-lang="rust"><span class="k">impl</span><span class="o">&lt;</span><span class="n">T</span>: <span class="nc">io</span>::<span class="n">Read</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">io</span>::<span class="n">Write</span><span class="p">,</span><span class="w"> </span><span class="n">F</span>: <span class="nb">Fn</span><span class="p">(</span><span class="n">Progress</span><span class="p">)</span><span class="o">&gt;</span><span class="w"> </span><span class="n">Xmodem</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="n">F</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
 </span><span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">new</span><span class="p">(</span><span class="n">inner</span>: <span class="nc">T</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">Self</span><span class="w"> </span><span class="p">{</span><span class="w">
 </span><span class="w">        </span><span class="n">Xmodem</span><span class="w"> </span><span class="p">{</span><span class="w">
 </span><span class="w">            </span><span class="n">packet</span>: <span class="mi">1</span><span class="p">,</span><span class="w">
@@ -247,7 +247,7 @@ I&rsquo;ve been doing class assignments from …">
 </span><span class="w">    </span><span class="c1">// and others
 </span><span class="c1"></span><span class="p">}</span><span class="w">
 </span><span class="w"></span></code></pre></div>
-<p><code>Xmodem::new</code> is returning <code>progress::noop</code>, our function pointer. Only it&rsquo;s type variable says that it must be a <code>Xmodem&lt;T, F&gt;</code> where F is some <code>FnMut(Progress)</code>. Substituting a closure <code>|_: Progress| {}</code> in it&rsquo;s place doesn&rsquo;t help either, it&rsquo;s still choosing some specific trait when there&rsquo;s a more general one in the type signature. Our type <code>F</code> claims to be valid for all <code>FnMut</code>, but we&rsquo;re giving it a specific closure/fn pointer. You may recognize this as being an existential type.</p>
+<p><code>Xmodem::new</code> is returning <code>progress::noop</code>, our function pointer. Only it&rsquo;s type variable says that it must be a <code>Xmodem&lt;T, F&gt;</code> where F is some <code>Fn(Progress)</code>. Substituting a closure <code>|_: Progress| {}</code> in it&rsquo;s place doesn&rsquo;t help either, it&rsquo;s still choosing some specific trait when there&rsquo;s a more general one in the type signature. Our type <code>F</code> claims to be valid for all <code>Fn</code>, but we&rsquo;re giving it a specific closure/fn pointer. You may recognize this as being an existential type.</p>
 
 <p>Here&rsquo;s the error:</p>
 <div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">error<span class="o">[</span>E0308<span class="o">]</span>: mismatched types
@@ -290,7 +290,7 @@ note: required by <span class="sb">`</span>&lt;Xmodem&lt;<span class="o">()</spa
 <span class="m">46</span> <span class="p">|</span> <span class="p">|</span>         Xmodem::transmit_with_progress<span class="o">(</span>data, to, progress::noop<span class="o">)</span>
 <span class="m">47</span> <span class="p">|</span> <span class="p">|</span>     <span class="o">}</span>
    <span class="p">|</span> <span class="p">|</span>_____^</code></pre></div>
-<p>You can solve this annotation with <code>Xmodem::&lt;(), fn(Progress) -&gt; ()&gt;::transmit</code>. But every call-site will need to be annotated. If the return type is changed to <code>impl FnMut</code>, as in the next section, it asks for an annotation I&rsquo;m not sure how to solve.</p>
+<p>You can solve this annotation with <code>Xmodem::&lt;(), fn(Progress) -&gt; ()&gt;::transmit</code>. But every call-site will need to be annotated. If the return type is changed to <code>impl Fn</code>, as in the next section, it asks for an annotation I&rsquo;m not sure how to solve.</p>
 
 <h2 id="using-unit-type-params">Using unit type params</h2>
 
@@ -318,7 +318,7 @@ note: required by <span class="sb">`</span>&lt;Xmodem&lt;<span class="o">()</spa
 </span><span class="w">    </span><span class="k">where</span><span class="w">
 </span><span class="w">        </span><span class="n">W</span>: <span class="nc">io</span>::<span class="n">Read</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">io</span>::<span class="n">Write</span><span class="p">,</span><span class="w">
 </span><span class="w">        </span><span class="n">R</span>: <span class="nc">io</span>::<span class="n">Read</span><span class="p">,</span><span class="w">
-</span><span class="w">        </span><span class="n">F</span>: <span class="nb">FnMut</span><span class="p">(</span><span class="n">Progress</span><span class="p">)</span><span class="w">
+</span><span class="w">        </span><span class="n">F</span>: <span class="nb">Fn</span><span class="p">(</span><span class="n">Progress</span><span class="p">)</span><span class="w">
 </span><span class="w">    </span><span class="p">{</span><span class="w">
 </span><span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="k">mut</span><span class="w"> </span><span class="n">transmitter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Xmodem</span>::<span class="n">new_with_progress</span><span class="p">(</span><span class="n">to</span><span class="p">,</span><span class="w"> </span><span class="n">f</span><span class="p">);</span><span class="w">
 </span><span class="w">        </span><span class="c1">//...
@@ -338,14 +338,14 @@ note: required by <span class="sb">`</span>&lt;Xmodem&lt;<span class="o">()</spa
 </span><span class="w"></span><span class="p">}</span><span class="w">
 </span><span class="w"></span><span class="n">with_progress</span><span class="w">
 </span><span class="w"></span></code></pre></div>
-<p>If I had put <code>impl&lt;F&gt; Xmodem&lt;(), F&gt;</code>, I would either have to bound the entire <code>impl</code> block by <code>where F: FnMut(Progress)</code>, which gets me back to:</p>
+<p>If I had put <code>impl&lt;F&gt; Xmodem&lt;(), F&gt;</code>, I would either have to bound the entire <code>impl</code> block by <code>where F: Fn(Progress)</code>, which gets me back to:</p>
 <div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">error<span class="o">[</span>E0284<span class="o">]</span>: <span class="nb">type</span> annotations required: cannot resolve <span class="sb">`</span>&lt;_ as std::ops::FnOnce&lt;<span class="o">(</span>progress::Progress,<span class="o">)</span>&gt;&gt;::Output <span class="o">==</span> <span class="o">()</span><span class="sb">`</span>
   --&gt; src/tests.rs:51:48
    <span class="p">|</span>
 <span class="m">51</span> <span class="p">|</span>     <span class="nb">let</span> <span class="nv">tx_thread</span> <span class="o">=</span> std::thread::spawn<span class="o">(</span>move <span class="o">||</span> Xmodem::transmit<span class="o">(</span><span class="p">&amp;</span>input<span class="o">[</span>..<span class="o">]</span>, rx<span class="o">))</span><span class="p">;</span> // &lt;FnOnce&lt;<span class="o">(</span>Progress<span class="o">)</span>&gt;&gt;::Output <span class="o">=</span> <span class="o">()</span></code></pre></div>
 <p>Or leave it unbounded, which would cause a compilation error when calling <code>new_with_progress</code>:</p>
 <div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash"><span class="m">106</span> <span class="p">|</span>         <span class="nb">let</span> mut <span class="nv">receiver</span> <span class="o">=</span> Xmodem::new_with_progress<span class="o">(</span>from, f<span class="o">)</span><span class="p">;</span>
-    <span class="p">|</span>                            ^^^^^^^^^^^^^^^^^^^^^^^^^ expected an <span class="sb">`</span>FnMut&lt;<span class="o">(</span>progress::Progress,<span class="o">)</span>&gt;<span class="sb">`</span> closure, found <span class="sb">`</span>F<span class="sb">`</span></code></pre></div>
+    <span class="p">|</span>                            ^^^^^^^^^^^^^^^^^^^^^^^^^ expected an <span class="sb">`</span>Fn&lt;<span class="o">(</span>progress::Progress,<span class="o">)</span>&gt;<span class="sb">`</span> closure, found <span class="sb">`</span>F<span class="sb">`</span></code></pre></div>
 <p>Unit&rsquo;s type and value are both <code>()</code>. In this case, we&rsquo;re able to satisfy the type parameters in the impl declaration and still control the bounds on the methods. The catch here is of course, the methods <code>transmit</code> <code>transmit_with_progress</code> and a few others not mentioned here are now only valid when <code>Xmodem::&lt;(), ()&gt;</code>.</p>
 
 <p>There&rsquo;s nothing prodigious about <code>()</code>. Any type will do. We could&rsquo;ve written:</p>
@@ -367,7 +367,7 @@ note: required by <span class="sb">`</span>&lt;Xmodem&lt;<span class="o">()</spa
 </span><span class="w"></span><span class="k">where</span><span class="w">
 </span><span class="w">    </span><span class="n">T</span>: <span class="nc">io</span>::<span class="n">Read</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">io</span>::<span class="n">Write</span><span class="p">,</span><span class="w">
 </span><span class="w"></span><span class="p">{</span><span class="w">
-</span><span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">new</span><span class="p">(</span><span class="n">inner</span>: <span class="nc">T</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">Xmodem</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="k">impl</span><span class="w"> </span><span class="nb">FnMut</span><span class="p">(</span><span class="n">Progress</span><span class="p">)</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">new</span><span class="p">(</span><span class="n">inner</span>: <span class="nc">T</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">Xmodem</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="k">impl</span><span class="w"> </span><span class="nb">Fn</span><span class="p">(</span><span class="n">Progress</span><span class="p">)</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
 </span><span class="w">        </span><span class="n">Xmodem</span><span class="w"> </span><span class="p">{</span><span class="w">
 </span><span class="w">            </span><span class="n">packet</span>: <span class="mi">1</span><span class="p">,</span><span class="w">
 </span><span class="w">            </span><span class="n">started</span>: <span class="nc">false</span><span class="p">,</span><span class="w">
@@ -381,7 +381,7 @@ note: required by <span class="sb">`</span>&lt;Xmodem&lt;<span class="o">()</spa
 
 <p>I was also directed to this possible solution, which is available on nightly behind a feature flag. This makes it possible to declare a type as existential and circumvent passing <code>()</code> as a type parameter. This is and the previous solution are from talchas:</p>
 <div class="highlight"><pre class="chroma"><code class="language-rust" data-lang="rust"><span class="cp">#![feature(existential_type)]</span><span class="w">
-</span><span class="w"></span><span class="n">existential</span><span class="w"> </span><span class="k">type</span> <span class="nc">ProgressFn</span>: <span class="nb">FnMut</span><span class="p">();</span><span class="w">
+</span><span class="w"></span><span class="n">existential</span><span class="w"> </span><span class="k">type</span> <span class="nc">ProgressFn</span>: <span class="nb">Fn</span><span class="p">();</span><span class="w">
 </span><span class="w">
 </span><span class="w"></span><span class="k">struct</span> <span class="nc">Foo</span><span class="o">&lt;</span><span class="n">F</span><span class="o">&gt;</span><span class="p">(</span><span class="n">F</span><span class="p">);</span><span class="w">
 </span><span class="w">
